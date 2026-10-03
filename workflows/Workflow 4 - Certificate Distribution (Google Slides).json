@@ -1,0 +1,652 @@
+{
+  "name": "Workflow 4 - Certificate Distribution (Google Slides)",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1yzZFLEdEJSukKI8IcS9hF7SpyPiR3M-0TvCZGebiuKI",
+          "mode": "list",
+          "cachedResultName": "AI Event Management Platform",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yzZFLEdEJSukKI8IcS9hF7SpyPiR3M-0TvCZGebiuKI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Participants",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yzZFLEdEJSukKI8IcS9hF7SpyPiR3M-0TvCZGebiuKI/edit#gid=0"
+        },
+        "event": "rowUpdate",
+        "options": {}
+      },
+      "id": "526193f7-f874-445d-8d24-f6174b99ca2b",
+      "name": "Google Sheets Trigger",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        224,
+        0
+      ],
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "4UR1MPffNRze7SwN",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-attendance-present",
+              "leftValue": "={{$json[\"Attendance Status\"]}}",
+              "rightValue": "Present",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-cert-not-sent",
+              "leftValue": "={{$json[\"Certificate Sent\"]}}",
+              "rightValue": "Yes",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4859eeb1-644d-4026-88d1-92d1e76c8c91",
+      "name": "Attendance Present & Not Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        432,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "13dxrTqW42XHj-hlyMZVknjfa_xS6Uk1Y87Al-18OUBc"
+        },
+        "name": "=={{ $json[\"Participant ID\"] + \" - \" + $json[\"Full Name\"] + \" Certificate\" }}",
+        "options": {}
+      },
+      "id": "10e0b563-283b-445a-84c6-ee3f6af5fcc6",
+      "name": "Copy Certificate Template",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        656,
+        -144
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "qYDBMEqJizBv51Kv",
+          "name": "Google Drive account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://slides.googleapis.com/v1/presentations/{{$json[\"id\"]}}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSlidesOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"requests\": [\n      {\n        \"replaceAllText\": {\n          \"containsText\": {\n            \"text\": \"<<NAME>>\",\n            \"matchCase\": true\n          },\n          \"replaceText\": $json[\"Full Name\"] || \"\"\n        }\n      },\n      {\n        \"replaceAllText\": {\n          \"containsText\": {\n            \"text\": \"<<EVENT>>\",\n            \"matchCase\": true\n          },\n          \"replaceText\": $json[\"Event Name\"] || \"\"\n        }\n      },\n      {\n        \"replaceAllText\": {\n          \"containsText\": {\n            \"text\": \"<<PARTICIPANT_ID>>\",\n            \"matchCase\": true\n          },\n          \"replaceText\": $json[\"Participant ID\"] || \"\"\n        }\n      },\n      {\n        \"replaceAllText\": {\n          \"containsText\": {\n            \"text\": \"<<DATE>>\",\n            \"matchCase\": true\n          },\n          \"replaceText\": $now.format(\"yyyy-MM-dd\")\n        }\n      }\n    ]\n  }\n}}",
+        "options": {}
+      },
+      "id": "2e6ae574-9241-4d78-9091-2a1c4e053341",
+      "name": "Replace Placeholders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        -144
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleSlidesOAuth2Api": {
+          "id": "TVPzdoIGPbggnSvq",
+          "name": "Google Slides account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{$('Copy Certificate Template').item.json[\"id\"]}}"
+        },
+        "options": {
+          "binaryPropertyName": "data",
+          "googleFileConversion": {
+            "conversion": {
+              "slidesToFormat": "application/pdf"
+            }
+          }
+        }
+      },
+      "id": "0f78efa6-a539-4988-b2be-e24c17af6939",
+      "name": "Export Certificate PDF",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1104,
+        -144
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "qYDBMEqJizBv51Kv",
+          "name": "Google Drive account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "name": "={{$('Google Sheets Trigger').item.json[\"Participant ID\"]}}-certificate.pdf",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1emsXBdij74F6GurVefCzBP2wysGavuSO",
+          "mode": "list",
+          "cachedResultName": "Event Certificates",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1emsXBdij74F6GurVefCzBP2wysGavuSO"
+        },
+        "options": {}
+      },
+      "id": "c94884e9-81ce-4f86-abc1-a653fca12f4d",
+      "name": "Upload Certificate PDF",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1312,
+        -240
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "qYDBMEqJizBv51Kv",
+          "name": "Google Drive account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "share",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{$json[\"id\"]}}"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "id": "2e2df315-246d-48a4-9c55-c09f07b918e3",
+      "name": "Share Certificate PDF",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1536,
+        -240
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "qYDBMEqJizBv51Kv",
+          "name": "Google Drive account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1yzZFLEdEJSukKI8IcS9hF7SpyPiR3M-0TvCZGebiuKI",
+          "mode": "list",
+          "cachedResultName": "AI Event Management Platform",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yzZFLEdEJSukKI8IcS9hF7SpyPiR3M-0TvCZGebiuKI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Participants",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yzZFLEdEJSukKI8IcS9hF7SpyPiR3M-0TvCZGebiuKI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Participant ID": "={{ $('Google Sheets Trigger').item.json['Participant ID'] }}",
+            "Certificate Sent": "YES",
+            "Certificate URL": "=https://drive.google.com/file/d/{{ $('Upload Certificate PDF').item.json.id }}/view"
+          },
+          "matchingColumns": [
+            "Participant ID"
+          ],
+          "schema": [
+            {
+              "id": "Participant ID",
+              "displayName": "Participant ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "College / Organization",
+              "displayName": "College / Organization",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Event Name",
+              "displayName": "Event Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Registration Time",
+              "displayName": "Registration Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "QR Code URL",
+              "displayName": "QR Code URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attendance Status",
+              "displayName": "Attendance Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Certificate Sent",
+              "displayName": "Certificate Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Sent ",
+              "displayName": "Email Sent ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Certificate URL",
+              "displayName": "Certificate URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "9405d70c-7808-4b85-8918-c031ff7d0c81",
+      "name": "Update Certificate Info",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1760,
+        -240
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "C6LmWlgBPFiQ5Qik",
+          "name": "Google Sheets account 2"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "id": "9a940bbf-eb9a-438c-9bd7-8d2776d2ba35",
+      "name": "Merge Binary With Sheet Data",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1984,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$('Google Sheets Trigger').item.json[\"Email\"]}}",
+        "subject": "=Your Participation Certificate - {{$('Google Sheets Trigger').item.json[\"Event Name\"]}}",
+        "message": "=Hi {{$('Google Sheets Trigger').item.json[\"Full Name\"]}},<br><br>Congratulations on successfully attending {{$('Google Sheets Trigger').item.json[\"Event Name\"]}}!<br><br>Your participation certificate is attached to this email.<br>If the attachment does not load, you can also view it here:<br><a href=\"{{$json[\"Certificate URL\"]}}\">{{$json[\"Certificate URL\"]}}</a><br><br>Thank you.<br><br>Regards,<br>Event Management Team",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "id": "b0c61d79-33e5-4d60-bc84-6f377e81e794",
+      "name": "Send Certificate Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2192,
+        -144
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "webhookId": "2d338542-3a53-481b-9644-997eedbef83a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "3gXC9E596U4PKs9J",
+          "name": "Gmail account 2"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "id": "efdaff73-0df0-4599-ad0f-4425f16c4a66",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        880,
+        160
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Attendance Present & Not Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attendance Present & Not Sent?": {
+      "main": [
+        [
+          {
+            "node": "Copy Certificate Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy Certificate Template": {
+      "main": [
+        [
+          {
+            "node": "Replace Placeholders",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Placeholders": {
+      "main": [
+        [
+          {
+            "node": "Export Certificate PDF",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Export Certificate PDF": {
+      "main": [
+        [
+          {
+            "node": "Upload Certificate PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Binary With Sheet Data",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Certificate PDF": {
+      "main": [
+        [
+          {
+            "node": "Share Certificate PDF",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share Certificate PDF": {
+      "main": [
+        [
+          {
+            "node": "Update Certificate Info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Certificate Info": {
+      "main": [
+        [
+          {
+            "node": "Merge Binary With Sheet Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Binary With Sheet Data": {
+      "main": [
+        [
+          {
+            "node": "Send Certificate Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "ad4ee83a-8594-49cf-a8dc-ddf0d5dd575e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "aafbb68f929b4dbaa0a6244b8efc717468be878f5b135a42f7797d83da1f909b"
+  },
+  "nodeGroups": [],
+  "id": "qBOgiz7jmsgFzZ41",
+  "tags": []
+}

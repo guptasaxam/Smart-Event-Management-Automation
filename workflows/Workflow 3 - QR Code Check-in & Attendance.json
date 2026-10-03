@@ -1,0 +1,467 @@
+{
+  "name": "Workflow 3 - QR Code Check-in & Attendance",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "checkin",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "8476820f-fa15-4fea-a639-ed81038879c6",
+      "name": "Webhook - Check-in",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        80
+      ],
+      "webhookId": "checkin-webhook-001"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1yzZFLEdEJSukKI8IcS9hF7SpyPiR3M-0TvCZGebiuKI",
+          "mode": "list",
+          "cachedResultName": "AI Event Management Platform",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yzZFLEdEJSukKI8IcS9hF7SpyPiR3M-0TvCZGebiuKI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Participants",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yzZFLEdEJSukKI8IcS9hF7SpyPiR3M-0TvCZGebiuKI/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Participant ID",
+              "lookupValue": "={{$json.body.participantId}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "567a9534-6565-42a1-95a9-e1c87760afb4",
+      "name": "Search Participant",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "alwaysOutputData": true,
+      "position": [
+        -512,
+        80
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "C6LmWlgBPFiQ5Qik",
+          "name": "Google Sheets account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-participant-found",
+              "leftValue": "={{$json[\"Participant ID\"]}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "539603ed-a8c9-4527-8396-cb463d2246d7",
+      "name": "Participant Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -288,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1yzZFLEdEJSukKI8IcS9hF7SpyPiR3M-0TvCZGebiuKI",
+          "mode": "list",
+          "cachedResultName": "AI Event Management Platform",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yzZFLEdEJSukKI8IcS9hF7SpyPiR3M-0TvCZGebiuKI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Participants",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yzZFLEdEJSukKI8IcS9hF7SpyPiR3M-0TvCZGebiuKI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Participant ID": "={{$json[\"Participant ID\"]}}",
+            "Attendance Status": "Present"
+          },
+          "matchingColumns": [
+            "Participant ID"
+          ],
+          "schema": [
+            {
+              "id": "Participant ID",
+              "displayName": "Participant ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "College / Organization",
+              "displayName": "College / Organization",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Event Name",
+              "displayName": "Event Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Registration Time",
+              "displayName": "Registration Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "QR Code URL",
+              "displayName": "QR Code URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attendance Status",
+              "displayName": "Attendance Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Certificate Sent",
+              "displayName": "Certificate Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Sent ",
+              "displayName": "Email Sent ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "9642eea2-122d-4784-9328-b55372841531",
+      "name": "Update Attendance",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -64,
+        -32
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "C6LmWlgBPFiQ5Qik",
+          "name": "Google Sheets account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "51c05bda-f235-4177-931b-a81598a96a0e",
+      "name": "Respond - Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"message\": \"Invalid QR Code\"\n}",
+        "options": {
+          "responseCode": 404
+        }
+      },
+      "id": "e1c1e2f7-14db-4c1b-b19e-59c84d8986f9",
+      "name": "Respond - Invalid QR",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -64,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"message\": \"Internal Server Error\"\n}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "id": "0aab7679-0a8e-4359-9dba-17d91b9e8df9",
+      "name": "Respond - Server Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        -288,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "441711d5-dea2-4dc3-95de-8855edcfd109",
+              "name": "success ",
+              "value": "true ",
+              "type": "string"
+            },
+            {
+              "id": "39826f2b-12af-4f4e-aa08-f3a6ea7fdb06",
+              "name": "message ",
+              "value": "Check-in Successful",
+              "type": "string"
+            },
+            {
+              "id": "6d486935-20be-46ff-8f7b-9fbe7f76050f",
+              "name": "participantId",
+              "value": "={{$json[\"Participant ID\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "f3841d0a-65e7-48e9-9708-31f08775effc",
+              "name": "name",
+              "value": "={{ $('Participant Found?').item.json['Full Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "a11b2560-fe4e-43fd-a668-5cb991ebae69",
+              "name": "event",
+              "value": "={{ $('Participant Found?').item.json['Event Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "8eddba75-fe67-433f-9a8d-2bb95c4da576",
+              "name": "attendance",
+              "value": "Present",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        -192
+      ],
+      "id": "84f3ed4e-0b0f-422d-8f12-e5546cfe2fd7",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - Check-in": {
+      "main": [
+        [
+          {
+            "node": "Search Participant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Participant": {
+      "main": [
+        [
+          {
+            "node": "Participant Found?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - Server Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Participant Found?": {
+      "main": [
+        [
+          {
+            "node": "Update Attendance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - Invalid QR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Attendance": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - Server Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond - Success": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond - Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "5cdd8933-1647-45b1-9208-8c9aa659fcfd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "aafbb68f929b4dbaa0a6244b8efc717468be878f5b135a42f7797d83da1f909b"
+  },
+  "nodeGroups": [],
+  "id": "dMmhhAApaY95virZ",
+  "tags": []
+}

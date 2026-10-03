@@ -1,0 +1,574 @@
+{
+  "name": "AI Event Management Platform - Workflow 1: Participant Registration",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Workflow 1: Participant Registration\n\n**Purpose:** Capture participant registration via form, generate a unique Participant ID (EVT-000X), store the record in Google Sheets, and send a confirmation email.\n\n**Error Handling Strategy:**\n- Critical nodes (Sheets write, Gmail send) use `retryOnFail` (1 retry)\n- On final failure, execution routes to the error output branch\n- Errors are logged to a dedicated `ErrorLog` sheet\n- Workflow continues gracefully instead of halting entirely",
+        "height": 380,
+        "width": 380,
+        "color": 6
+      },
+      "id": "8abae1a0-95cb-48a7-bd48-48799286eb9f",
+      "name": "Sticky Note - Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Event Registration",
+        "formDescription": "Register for our upcoming event. Please fill in all fields accurately.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Full Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Phone",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "College/Organization",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Event Name",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "buttonLabel": "Register"
+        }
+      },
+      "id": "00540ae7-a02b-468e-a7dc-be5035b2dbf0",
+      "name": "Registration Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        384,
+        176
+      ],
+      "webhookId": "e0cac5d5-cee6-4dba-8970-f9db13393ebe"
+    },
+    {
+      "parameters": {
+        "jsCode": "const formData = $input.first().json;\n\nconst participantId = `EVT-${Date.now()}`;\n\nreturn [\n  {\n    json: {\n      participantId,\n      fullName: formData[\"Full Name\"],\n      email: formData[\"Email\"],\n      phone: formData[\"Phone\"],\n      college: formData[\"College/Organization\"],\n      eventName: formData[\"Event Name\"],\n      registrationTime: new Date().toISOString(),\n      status: \"Registered\"\n    }\n  }\n];"
+      },
+      "id": "eb35ca0c-6dcf-400c-b510-862c1d666b7e",
+      "name": "Generate Participant ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        176
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "assign-participant-id",
+              "name": "Participant ID",
+              "value": "={{$json.participantId}}",
+              "type": "string"
+            },
+            {
+              "id": "assign-name",
+              "name": "Name",
+              "value": "={{$json.fullName}}",
+              "type": "string"
+            },
+            {
+              "id": "assign-email",
+              "name": "Email",
+              "value": "={{$json.email}}",
+              "type": "string"
+            },
+            {
+              "id": "assign-phone",
+              "name": "Phone",
+              "value": "={{$json.phone}}",
+              "type": "string"
+            },
+            {
+              "id": "assign-college",
+              "name": "College",
+              "value": "={{$json.college}}",
+              "type": "string"
+            },
+            {
+              "id": "assign-event",
+              "name": "Event",
+              "value": "={{$json.eventName}}",
+              "type": "string"
+            },
+            {
+              "id": "assign-reg-time",
+              "name": "Registration Time",
+              "value": "={{$json.registrationTime}}",
+              "type": "string"
+            },
+            {
+              "id": "assign-status",
+              "name": "Status",
+              "value": "={{$json.status}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f53b2131-5394-44fb-a87d-6dee5bcf380b",
+      "name": "Map to Sheet Columns",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1yzZFLEdEJSukKI8IcS9hF7SpyPiR3M-0TvCZGebiuKI",
+          "mode": "list",
+          "cachedResultName": "AI Event Management Platform",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yzZFLEdEJSukKI8IcS9hF7SpyPiR3M-0TvCZGebiuKI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Participants",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yzZFLEdEJSukKI8IcS9hF7SpyPiR3M-0TvCZGebiuKI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Participant ID": "={{ $json['Participant ID'] }}",
+            "Full Name": "={{ $json.Name }}",
+            "Email": "={{ $json.Email }}",
+            "Phone Number": "={{ $json.Phone }}",
+            "College / Organization": "={{ $json.College }}",
+            "Event Name": "={{ $json.Event }}",
+            "Registration Time": "={{ $json['Registration Time'] }}",
+            "Status": "={{ $json.Status }}",
+            "QR Code URL": "={{\" \"}}",
+            "Attendance Status": "={{\" \"}}",
+            "Certificate Sent": "={{ \"\" }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Participant ID",
+              "displayName": "Participant ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "College / Organization",
+              "displayName": "College / Organization",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Event Name",
+              "displayName": "Event Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Registration Time",
+              "displayName": "Registration Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "QR Code URL",
+              "displayName": "QR Code URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attendance Status",
+              "displayName": "Attendance Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Certificate Sent",
+              "displayName": "Certificate Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "d77b4b9c-c8ac-406b-8da6-bee5887b6932",
+      "name": "Save Registration to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1264,
+        176
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Bm99IfvlHyeapGSU",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$json.Email}}",
+        "subject": "=Registration Confirmed - {{ $json['Event Name'] }} ({{$json['Participant ID']}})",
+        "message": "=<p>Dear {{ $json['Full Name'] }} ,</p><p>Thank you for registering for <strong>{{ $json['Event Name'] }}</strong>. We are pleased to confirm that your registration has been successfully received and recorded.</p><p><strong>Your Participant ID:</strong> {{$json['Participant ID']}}<br/><strong>Event:</strong> {{ $json['Event Name']  }}<br/><strong>Registered On:</strong> {{$json['Registration Time']}}</p><p>Please keep this Participant ID safe, as it will be required for check-in and further communications regarding the event, including your QR code entry pass.</p><p>We look forward to your participation.</p><p>Best regards,<br/>Event Management Team</p>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "c370b291-1aac-4d73-90f1-cac387ecf7c2",
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1472,
+        176
+      ],
+      "webhookId": "send-confirmation-email-webhook",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "jDPV6XYijfa53tN0",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize error details from whichever node failed, for consistent logging\nconst items = $input.all();\nconst now = new Date().toISOString();\n\nreturn items.map((item) => {\n  const err = item.json.error || {};\n  return {\n    json: {\n      Timestamp: now,\n      WorkflowName: 'Participant Registration',\n      FailedNode: err.node ? err.node.name : ($workflow.name || 'Unknown'),\n      ErrorMessage: err.message || item.json.message || 'Unknown error occurred',\n      RawData: JSON.stringify(item.json).slice(0, 500)\n    }\n  };\n});"
+      },
+      "id": "42fd56c6-6a08-49fb-a4a9-ccb62d0ba1e2",
+      "name": "Format Error Details",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1yzZFLEdEJSukKI8IcS9hF7SpyPiR3M-0TvCZGebiuKI",
+          "mode": "list",
+          "cachedResultName": "AI Event Management Platform",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yzZFLEdEJSukKI8IcS9hF7SpyPiR3M-0TvCZGebiuKI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1,
+          "mode": "list",
+          "cachedResultName": "ErrorLog",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yzZFLEdEJSukKI8IcS9hF7SpyPiR3M-0TvCZGebiuKI/edit#gid=1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Workflow Name",
+              "displayName": "Workflow Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Node Name",
+              "displayName": "Node Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Error Message",
+              "displayName": "Error Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Execution ID",
+              "displayName": "Execution ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Raw Data",
+              "displayName": "Raw Data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "cd0c476e-5f3c-452c-adb4-fbf93b5aebe4",
+      "name": "Log Error to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1472,
+        448
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Bm99IfvlHyeapGSU",
+          "name": "Google Sheets account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "content": "## Error Handling Branch\n\nWhen `Get Existing Participants`, `Generate Participant ID`, `Save Registration to Sheet`, or `Send Confirmation Email` fail after 1 retry, execution flows here instead of stopping the workflow.\n\n1. **Format Error Details** - normalizes the error payload\n2. **Log Error to Sheet** - appends to the `ErrorLog` sheet for later review\n\nThis ensures the workflow degrades gracefully rather than crashing entirely, and gives admins full visibility into failed registrations.",
+        "height": 300,
+        "width": 380,
+        "color": 4
+      },
+      "id": "c7128f5a-b83e-4fa7-8be0-8b4cef4c5469",
+      "name": "Sticky Note - Error Handling",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Google Sheet Structure Required\n\n**Sheet: Participants**\nParticipant ID | Name | Email | Phone | College | Event | Registration Time | Status\n\n**Sheet: ErrorLog**\nTimestamp | WorkflowName | FailedNode | ErrorMessage | RawData\n\nReplace `YOUR_GOOGLE_SHEET_ID` in each Google Sheets node with your actual Spreadsheet ID, and configure Google Sheets / Gmail credentials before activating.",
+        "height": 280,
+        "width": 380,
+        "color": 3
+      },
+      "id": "4fa48b15-7f60-415b-af62-40188e8f059b",
+      "name": "Sticky Note - Sheet Setup",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        416
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Registration Form": {
+      "main": [
+        [
+          {
+            "node": "Generate Participant ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Participant ID": {
+      "main": [
+        [
+          {
+            "node": "Map to Sheet Columns",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Error Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map to Sheet Columns": {
+      "main": [
+        [
+          {
+            "node": "Save Registration to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Registration to Sheet": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Error Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Confirmation Email": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Format Error Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Error Details": {
+      "main": [
+        [
+          {
+            "node": "Log Error to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "01122a10-a6e9-41c0-8e7a-922d58771b42",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "aafbb68f929b4dbaa0a6244b8efc717468be878f5b135a42f7797d83da1f909b"
+  },
+  "nodeGroups": [],
+  "id": "mPzu3IYls2T0X51y",
+  "tags": []
+}

@@ -95,35 +95,6 @@ PDF Storage
 ↓
 Email Delivery
 
-## 📸 Screenshots
-
-### Workflow 1 — Participant Registration
-
-![Workflow 1](screenshots/workflow-1-registration.png)
-
-### Workflow 2 — QR Code Generation
-
-![Workflow 2](screenshots/workflow-2-qr-generation.png)
-
-### Workflow 3 — QR Check-in & Attendance
-
-![Workflow 3](screenshots/workflow-3-attendance.png)
-
-### Workflow 4 — Certificate Distribution
-
-![Workflow 4](screenshots/workflow-4-certificate.png)
-
-### Generated QR Code
-
-![QR Code](screenshots/qr-code.png)
-
-### Generated Certificate
-
-![Certificate](screenshots/certificate.png)
-
-### Automated Email
-
-![Email](screenshots/email.png)
 
 ## 📁 Repository Structure
 
